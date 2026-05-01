@@ -1,6 +1,5 @@
-dofile(vim.g.base46_cache .. "nvcheatsheet")
 local api = vim.api
-local ch = require "nvchad.cheatsheet"
+local ch = require "nocheatsheet.cheatsheet"
 local state = ch.state
 
 local ascii = {
@@ -17,7 +16,7 @@ local ascii = {
 return function(buf, win, action)
   action = action or "open"
 
-  local ns = api.nvim_create_namespace "nvcheatsheet"
+  local ns = api.nvim_create_namespace "nocheatsheet"
 
   if action == "open" then
     state.mappings_tb = ch.organize_mappings()
@@ -30,7 +29,7 @@ return function(buf, win, action)
 
   -- add left padding (strs) to ascii so it looks centered
   local ascii_header = vim.tbl_values(ascii)
-  local ascii_padding = (api.nvim_win_get_width(win) / 2) - (#ascii_header[1] / 2)
+  local ascii_padding = math.max(math.floor((api.nvim_win_get_width(win) / 2) - (#ascii_header[1] / 2)), 0)
 
   for i, str in ipairs(ascii_header) do
     ascii_header[i] = string.rep(" ", ascii_padding) .. str
@@ -68,14 +67,14 @@ return function(buf, win, action)
         cards[name] = {}
       end
 
-      table.insert(cards[name], { { emptyline, "nvchsection" } })
+      table.insert(cards[name], { { emptyline, "NoCheatSheetSection" } })
 
       local whitespace_len = column_width - 4 - vim.fn.strdisplaywidth(mapping[1] .. mapping[2])
       local pretty_mapping = mapping[1] .. string.rep(" ", whitespace_len) .. mapping[2]
 
-      table.insert(cards[name], { { "  " .. pretty_mapping .. "  ", "nvchsection" } })
+      table.insert(cards[name], { { "  " .. pretty_mapping .. "  ", "NoCheatSheetSection" } })
     end
-    table.insert(cards[name], { { emptyline, "nvchsection" } })
+    table.insert(cards[name], { { emptyline, "NoCheatSheetSection" } })
 
     table.insert(cards[name], { { emptyline } })
   end
@@ -90,9 +89,9 @@ return function(buf, win, action)
 
     -- center the heading
     key = {
-      { string.rep(" ", pad_l), "nvchsection" },
+      { string.rep(" ", pad_l), "NoCheatSheetSection" },
       { key, ch.rand_hlgroup() },
-      { string.rep(" ", pad_r), "nvchsection" },
+      { string.rep(" ", pad_r), "NoCheatSheetSection" },
     }
 
     table.insert(entries, { key, unpack(value) }) -- Create a table with the key and its values
@@ -128,7 +127,7 @@ return function(buf, win, action)
 
   for i, v in ipairs(ascii_header) do
     api.nvim_buf_set_extmark(buf, ns, i - 1, 0, {
-      virt_text = { { v, "NvChAsciiHeader" } },
+      virt_text = { { v, "NoCheatSheetAsciiHeader" } },
       virt_text_pos = "overlay",
     })
   end

@@ -1,7 +1,7 @@
 local api = vim.api
 local genstr = string.rep
 local strw = api.nvim_strwidth
-local ch = require "nvchad.cheatsheet"
+local ch = require "nocheatsheet.cheatsheet"
 local state = ch.state
 local gapx = 10
 local heading = {
@@ -9,20 +9,10 @@ local heading = {
   "█▄▄ █▀█ ██▄ █▀█ ░█░ ▄█ █▀█ ██▄ ██▄ ░█░",
 }
 
-dofile(vim.g.base46_cache .. "nvcheatsheet")
-
-api.nvim_create_autocmd("BufWinLeave", {
-  callback = function()
-    if vim.bo.ft == "nvcheatsheet" then
-      vim.g.nvcheatsheet_displayed = false
-    end
-  end,
-})
-
 return function(buf, win, action)
   action = action or "open"
 
-  local ns = api.nvim_create_namespace "nvcheatsheet"
+  local ns = api.nvim_create_namespace "nocheatsheet"
   local win_w = api.nvim_win_get_width(0)
 
   if action == "open" then
@@ -56,10 +46,10 @@ return function(buf, win, action)
   end
 
   local lines = {
-    { genstr(" ", box_w), "NvChAsciiHeader" },
-    { addpadding(heading[1]), "NvChAsciiHeader" },
-    { addpadding(heading[2]), "NvChAsciiHeader" },
-    { genstr(" ", box_w), "NvChAsciiHeader" },
+    { genstr(" ", box_w), "NoCheatSheetAsciiHeader" },
+    { addpadding(heading[1]), "NoCheatSheetAsciiHeader" },
+    { addpadding(heading[2]), "NoCheatSheetAsciiHeader" },
+    { genstr(" ", box_w), "NoCheatSheetAsciiHeader" },
     { "" },
   }
 
@@ -67,25 +57,26 @@ return function(buf, win, action)
   table.sort(sections)
 
   for _, name in ipairs(sections) do
-    table.insert(lines, { addpadding(name), "NvChheading" })
-    table.insert(lines, { genstr(" ", box_w), "NvChSection" })
+    table.insert(lines, { addpadding(name), "NoCheatSheetHeading" })
+    table.insert(lines, { genstr(" ", box_w), "NoCheatSheetSection" })
 
     for _, val in ipairs(state.mappings_tb[name]) do
       local pad = max_strlen - strw(val[1]) - strw(val[2]) + gapx
       local str = "  " .. val[1] .. genstr(" ", pad) .. val[2] .. "   "
 
-      table.insert(lines, { str, "NvChSection" })
-      table.insert(lines, { genstr(" ", #str), "NvChSection" })
+      table.insert(lines, { str, "NoCheatSheetSection" })
+      table.insert(lines, { genstr(" ", #str), "NoCheatSheetSection" })
     end
 
     table.insert(lines, { "" })
   end
 
-  local start_col = math.floor(win_w / 2) - math.floor(box_w / 2)
+  local start_col = math.max(math.floor(win_w / 2) - math.floor(box_w / 2), 0)
+  local line_w = math.max(win_w, start_col + box_w + 1)
 
   -- make columns drawable
   for i = 1, #lines, 1 do
-    api.nvim_buf_set_lines(buf, i, i, false, { string.rep(" ", win_w - 10) })
+    api.nvim_buf_set_lines(buf, i, i, false, { string.rep(" ", line_w) })
   end
 
   for row, val in ipairs(lines) do

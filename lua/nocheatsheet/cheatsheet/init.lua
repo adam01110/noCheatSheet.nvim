@@ -1,13 +1,13 @@
 local M = {}
 local api = vim.api
-local config = require "nvconfig"
+local config = require "nocheatsheet.config"
 
 local function capitalize(str)
   return (str:gsub("^%l", string.upper))
 end
 
 M.get_mappings = function(mappings, tb_to_add)
-  local excluded_groups = require("nvconfig").cheatsheet.excluded_groups
+  local excluded_groups = config.options.excluded_groups
 
   for _, v in ipairs(mappings) do
     local desc = v.desc
@@ -52,10 +52,10 @@ M.organize_mappings = function()
 
   for _, mode in ipairs(modes) do
     local keymaps = vim.api.nvim_get_keymap(mode)
-    require("nvchad.cheatsheet").get_mappings(keymaps, tb_to_add)
+    require("nocheatsheet.cheatsheet").get_mappings(keymaps, tb_to_add)
 
     local bufkeymaps = vim.api.nvim_buf_get_keymap(0, mode)
-    require("nvchad.cheatsheet").get_mappings(bufkeymaps, tb_to_add)
+    require("nocheatsheet.cheatsheet").get_mappings(bufkeymaps, tb_to_add)
   end
 
   return tb_to_add
@@ -69,46 +69,57 @@ M.organize_mappings = function()
 end
 
 M.autocmds = function(buf)
-  require("nvchad.utils").set_cleanbuf_opts("nvcheatsheet", buf)
+  vim.bo[buf].buflisted = false
+  vim.bo[buf].modifiable = false
+  vim.bo[buf].buftype = "nofile"
+  vim.bo[buf].filetype = "nocheatsheet"
+  vim.wo.number = false
+  vim.wo.list = false
+  vim.wo.wrap = false
+  vim.wo.relativenumber = false
+  vim.wo.cursorline = false
+  vim.wo.colorcolumn = "0"
+  vim.wo.foldcolumn = "0"
+  vim.g.nocheatsheet_displayed = true
 
-  local group_id = api.nvim_create_augroup("NvCh", { clear = true })
+  local group_id = api.nvim_create_augroup("NoCheatSheet", { clear = true })
 
   api.nvim_create_autocmd("BufWinLeave", {
     group = group_id,
     buffer = buf,
     callback = function()
-      vim.g.nvcheatsheet_displayed = false
-      api.nvim_del_augroup_by_name "NvCh"
+      vim.g.nocheatsheet_displayed = false
+      pcall(api.nvim_del_augroup_by_name, "NoCheatSheet")
     end,
   })
 
   api.nvim_create_autocmd({ "WinResized", "VimResized" }, {
     group = group_id,
     callback = function()
-      require("nvchad.cheatsheet." .. config.cheatsheet.theme)(vim.g.nvch_buf, vim.g.nvch_win, "redraw")
+      require("nocheatsheet.cheatsheet." .. config.options.theme)(
+        vim.g.nocheatsheet_buf,
+        vim.g.nocheatsheet_win,
+        "redraw"
+      )
     end,
   })
 
   local close_buf = function()
-    if config.ui.tabufline.enabled then
-      require("nvchad.tabufline").close_buffer()
-    else
-      vim.cmd "bd"
-    end
+    api.nvim_buf_delete(buf, { force = true })
   end
 
   vim.keymap.set("n", "q", close_buf, { buffer = buf })
   vim.keymap.set("n", "<ESC>", close_buf, { buffer = buf })
 
-  vim.g.nvch_buf = buf
-  vim.g.nvch_win = vim.fn.bufwinid(buf)
+  vim.g.nocheatsheet_buf = buf
+  vim.g.nocheatsheet_win = vim.fn.bufwinid(buf)
 end
 
 M.rand_hlgroup = function()
   local hlgroups =
     { "blue", "red", "green", "yellow", "orange", "baby_pink", "purple", "white", "cyan", "vibrant_green", "teal" }
 
-  return "NvChHead" .. hlgroups[math.random(1, #hlgroups)]
+  return "NoCheatSheetHead" .. hlgroups[math.random(1, #hlgroups)]
 end
 
 M.state = {
