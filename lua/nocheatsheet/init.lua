@@ -27,6 +27,18 @@ local function blend(fg, bg, alpha)
   return r * 65536 + g * 256 + b
 end
 
+local function luminance(value)
+  local r = math.floor(value / 65536) % 256
+  local g = math.floor(value / 256) % 256
+  local b = value % 256
+
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+end
+
+local function contrast_fg(bg, dark, light)
+  return luminance(bg) > 0.55 and dark or light
+end
+
 local function color(name, field, default)
   return fallback(get_hl(name)[field], default)
 end
@@ -35,24 +47,54 @@ local function default_highlights()
   local normal = get_hl "Normal"
   local normal_fg = fallback(normal.fg, 0xd8dee9)
   local normal_bg = fallback(normal.bg, vim.o.background == "light" and 0xffffff or 0x101010)
-  local section_bg = fallback(get_hl("NormalFloat").bg, blend(normal_fg, normal_bg, 0.08))
+  local section_bg = fallback(get_hl("NormalFloat").bg, blend(normal_fg, normal_bg, 0.10))
+  if section_bg == normal_bg then
+    section_bg = blend(normal_fg, normal_bg, 0.10)
+  end
 
-  return {
-    NoCheatSheetAsciiHeader = { fg = color("Title", "fg", normal_fg), bg = section_bg, bold = true },
+  local blue = color("Identifier", "fg", 0x61afef)
+  local red = color("ErrorMsg", "fg", 0xe06c75)
+  local green = color("String", "fg", 0x98c379)
+  local yellow = color("WarningMsg", "fg", 0xe5c07b)
+  local orange = color("Number", "fg", 0xd19a66)
+  local baby_pink = color("Special", "fg", 0xde98fd)
+  local purple = color("Statement", "fg", 0xc678dd)
+  local white = color("Normal", "fg", normal_fg)
+  local cyan = color("Type", "fg", 0x56b6c2)
+  local vibrant_green = color("Constant", "fg", 0x7eca9c)
+  local teal = color("PreProc", "fg", 0x519aba)
+
+  local highlights = {
+    NoCheatSheetAsciiHeader = { fg = blue, bg = section_bg, bold = true },
     NoCheatSheetSection = { fg = normal_fg, bg = section_bg },
-    NoCheatSheetHeading = { fg = color("Function", "fg", normal_fg), bg = section_bg, bold = true },
-    NoCheatSheetHeadblue = { fg = color("Identifier", "fg", 0x61afef), bg = section_bg, bold = true },
-    NoCheatSheetHeadred = { fg = color("ErrorMsg", "fg", 0xe06c75), bg = section_bg, bold = true },
-    NoCheatSheetHeadgreen = { fg = color("String", "fg", 0x98c379), bg = section_bg, bold = true },
-    NoCheatSheetHeadyellow = { fg = color("WarningMsg", "fg", 0xe5c07b), bg = section_bg, bold = true },
-    NoCheatSheetHeadorange = { fg = color("Number", "fg", 0xd19a66), bg = section_bg, bold = true },
-    NoCheatSheetHeadbaby_pink = { fg = color("Special", "fg", 0xde98fd), bg = section_bg, bold = true },
-    NoCheatSheetHeadpurple = { fg = color("Statement", "fg", 0xc678dd), bg = section_bg, bold = true },
-    NoCheatSheetHeadwhite = { fg = normal_fg, bg = section_bg, bold = true },
-    NoCheatSheetHeadcyan = { fg = color("Type", "fg", 0x56b6c2), bg = section_bg, bold = true },
-    NoCheatSheetHeadvibrant_green = { fg = color("Constant", "fg", 0x7eca9c), bg = section_bg, bold = true },
-    NoCheatSheetHeadteal = { fg = color("PreProc", "fg", 0x519aba), bg = section_bg, bold = true },
+    NoCheatSheetHeading = { fg = contrast_fg(blue, normal_bg, normal_fg), bg = blue, bold = true },
   }
+
+  if config.options.theme == "grid" then
+    highlights.NoCheatSheetAsciiHeader = { fg = blue, bold = true }
+
+    local colors = {
+      blue = blue,
+      red = red,
+      green = green,
+      yellow = yellow,
+      orange = orange,
+      baby_pink = baby_pink,
+      purple = purple,
+      white = white,
+      cyan = cyan,
+      vibrant_green = vibrant_green,
+      teal = teal,
+    }
+
+    for name, bg in pairs(colors) do
+      highlights["NoCheatSheetHead" .. name] = { fg = contrast_fg(bg, normal_bg, normal_fg), bg = bg, bold = true }
+    end
+
+    return highlights
+  end
+
+  return highlights
 end
 
 local function set_highlights()

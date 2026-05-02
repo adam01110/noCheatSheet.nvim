@@ -80,7 +80,7 @@ return function(buf, win, action)
   end
 
   for row, val in ipairs(lines) do
-    local opts = { virt_text_pos = "overlay", virt_text = { val } }
+    local opts = { virt_text_pos = "overlay", virt_text = { val }, hl_mode = "replace" }
     api.nvim_buf_set_extmark(buf, ns, row, start_col, opts)
   end
 

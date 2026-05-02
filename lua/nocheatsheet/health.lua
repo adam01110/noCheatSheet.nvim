@@ -64,6 +64,17 @@ M.check = function()
       { "Call setup() after your colorscheme or check highlight overrides." }
     )
   end
+
+  local head = vim.api.nvim_get_hl(0, { name = "NoCheatSheetHeadblue", link = false })
+
+  if config.options.theme ~= "grid" or head.bg then
+    ok "grid header highlights have backgrounds"
+  else
+    warn(
+      "NoCheatSheetHeadblue has no background",
+      { "Call setup() after your colorscheme or check highlight overrides." }
+    )
+  end
 end
 
 return M

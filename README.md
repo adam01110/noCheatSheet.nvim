@@ -11,7 +11,7 @@ This keeps the auto-generated keymap cheatsheet from `nvchad/ui`, but removes th
 - Provides the `:Cheatsheet` command.
 - Builds sections from current Neovim keymap descriptions.
 - Supports the original `grid` and `simple` layouts.
-- Uses standard highlight links instead of generated `base46` highlight cache files.
+- Derives explicit highlight colors from your active colorscheme instead of using generated `base46` cache files.
 - Does not require `nvchad/base46`, `nvchad/volt`, statusline, tabline, dashboard, cmp UI, mason helpers, or telescope extensions.
 
 ## Install
@@ -100,7 +100,7 @@ Run:
 :checkhealth nocheatsheet
 ```
 
-This checks module loading, setup availability, theme validity, command registration, and whether the main section highlight has a background.
+This checks module loading, setup availability, theme validity, command registration, and whether the main card/header highlights have backgrounds.
 
 ## Compatibility
 

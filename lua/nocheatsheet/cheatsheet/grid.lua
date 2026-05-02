@@ -129,6 +129,7 @@ return function(buf, win, action)
     api.nvim_buf_set_extmark(buf, ns, i - 1, 0, {
       virt_text = { { v, "NoCheatSheetAsciiHeader" } },
       virt_text_pos = "overlay",
+      hl_mode = "replace",
     })
   end
 
@@ -141,6 +142,7 @@ return function(buf, win, action)
         api.nvim_buf_set_extmark(buf, ns, row_i + i, col_start, {
           virt_text = v,
           virt_text_pos = "overlay",
+          hl_mode = "replace",
         })
       end
 
