@@ -35,8 +35,12 @@ local function luminance(value)
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255
 end
 
-local function contrast_fg(bg, dark, light)
-  return luminance(bg) > 0.55 and dark or light
+local function normalize_chip_bg(bg, normal_fg)
+  if vim.o.background == "dark" and luminance(bg) < 0.48 then
+    return blend(normal_fg, bg, 0.35)
+  end
+
+  return bg
 end
 
 local function color(name, field, default)
@@ -52,22 +56,23 @@ local function default_highlights()
     section_bg = blend(normal_fg, normal_bg, 0.10)
   end
 
-  local blue = color("Identifier", "fg", 0x61afef)
-  local red = color("ErrorMsg", "fg", 0xe06c75)
-  local green = color("String", "fg", 0x98c379)
-  local yellow = color("WarningMsg", "fg", 0xe5c07b)
-  local orange = color("Number", "fg", 0xd19a66)
-  local baby_pink = color("Special", "fg", 0xde98fd)
-  local purple = color("Statement", "fg", 0xc678dd)
-  local white = color("Normal", "fg", normal_fg)
-  local cyan = color("Type", "fg", 0x56b6c2)
-  local vibrant_green = color("Constant", "fg", 0x7eca9c)
-  local teal = color("PreProc", "fg", 0x519aba)
+  local chip_fg = vim.o.background == "light" and normal_fg or normal_bg
+  local blue = normalize_chip_bg(color("Identifier", "fg", 0x61afef), normal_fg)
+  local red = normalize_chip_bg(color("ErrorMsg", "fg", 0xe06c75), normal_fg)
+  local green = normalize_chip_bg(color("String", "fg", 0x98c379), normal_fg)
+  local yellow = normalize_chip_bg(color("WarningMsg", "fg", 0xe5c07b), normal_fg)
+  local orange = normalize_chip_bg(color("Number", "fg", 0xd19a66), normal_fg)
+  local baby_pink = normalize_chip_bg(color("Special", "fg", 0xde98fd), normal_fg)
+  local purple = normalize_chip_bg(color("Statement", "fg", 0xc678dd), normal_fg)
+  local white = normalize_chip_bg(color("Normal", "fg", normal_fg), normal_fg)
+  local cyan = normalize_chip_bg(color("Type", "fg", 0x56b6c2), normal_fg)
+  local vibrant_green = normalize_chip_bg(color("Constant", "fg", 0x7eca9c), normal_fg)
+  local teal = normalize_chip_bg(color("PreProc", "fg", 0x519aba), normal_fg)
 
   local highlights = {
     NoCheatSheetAsciiHeader = { fg = blue, bg = section_bg, bold = true },
     NoCheatSheetSection = { fg = normal_fg, bg = section_bg },
-    NoCheatSheetHeading = { fg = contrast_fg(blue, normal_bg, normal_fg), bg = blue, bold = true },
+    NoCheatSheetHeading = { fg = chip_fg, bg = blue, bold = true },
   }
 
   if config.options.theme == "grid" then
@@ -88,7 +93,7 @@ local function default_highlights()
     }
 
     for name, bg in pairs(colors) do
-      highlights["NoCheatSheetHead" .. name] = { fg = contrast_fg(bg, normal_bg, normal_fg), bg = bg, bold = true }
+      highlights["NoCheatSheetHead" .. name] = { fg = chip_fg, bg = bg, bold = true }
     end
 
     return highlights
