@@ -117,7 +117,7 @@ end
 
 M.rand_hlgroup = function()
   local hlgroups =
-    { "blue", "red", "green", "yellow", "orange", "baby_pink", "purple", "white", "cyan", "vibrant_green", "teal" }
+    { "blue", "red", "green", "yellow", "orange", "baby_pink", "purple", "cyan", "vibrant_green", "teal" }
 
   return "NoCheatSheetHead" .. hlgroups[math.random(1, #hlgroups)]
 end
