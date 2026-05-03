@@ -11,26 +11,48 @@ local function get_hl(name)
   return ok and hl or {}
 end
 
+---Fallback to a hex string. Accepts either a number (0xRRGGBB), a string ("#RRGGBB"), or nil.
 local function fallback(value, default)
-  return value and value > 0 and value or default
+  if value == nil then
+    return default
+  elseif type(value) == "number" then
+    return value > 0 and string.format("#%06x", value) or default
+  elseif type(value) == "string" then
+    return value
+  end
+  return default
+end
+
+local function hex_to_rgb(val)
+  local num = val
+  if type(num) == "string" then
+    num = tonumber(num:gsub("^#", ""), 16)
+  end
+  local r = math.floor(num / 65536) % 256
+  local g = math.floor(num / 256) % 256
+  local b = num % 256
+  return r, g, b
 end
 
 local function blend(fg, bg, alpha)
-  local function channel(value, shift)
-    return math.floor(value / 2 ^ shift) % 256
-  end
+  local fg_r, fg_g, fg_b = hex_to_rgb(fg)
+  local bg_r, bg_g, bg_b = hex_to_rgb(bg)
 
-  local r = math.floor(channel(fg, 16) * alpha + channel(bg, 16) * (1 - alpha))
-  local g = math.floor(channel(fg, 8) * alpha + channel(bg, 8) * (1 - alpha))
-  local b = math.floor(channel(fg, 0) * alpha + channel(bg, 0) * (1 - alpha))
+  local r = math.floor(fg_r * alpha + bg_r * (1 - alpha))
+  local g = math.floor(fg_g * alpha + bg_g * (1 - alpha))
+  local b = math.floor(fg_b * alpha + bg_b * (1 - alpha))
 
-  return r * 65536 + g * 256 + b
+  return string.format("#%02x%02x%02x", r, g, b)
 end
 
 local function luminance(value)
-  local r = math.floor(value / 65536) % 256
-  local g = math.floor(value / 256) % 256
-  local b = value % 256
+  local num = value
+  if type(num) == "string" then
+    num = tonumber(num:gsub("^#", ""), 16)
+  end
+  local r = math.floor(num / 65536) % 256
+  local g = math.floor(num / 256) % 256
+  local b = num % 256
 
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255
 end
@@ -49,34 +71,34 @@ end
 
 local function default_highlights()
   local normal = get_hl "Normal"
-  local normal_fg = fallback(normal.fg, 0xd8dee9)
-  local normal_bg = fallback(normal.bg, vim.o.background == "light" and 0xffffff or 0x101010)
+  local normal_fg = fallback(normal.fg, "#d8dee9")
+  local normal_bg = fallback(normal.bg, vim.o.background == "light" and "#ffffff" or "#101010")
   local section_bg = fallback(get_hl("NormalFloat").bg, blend(normal_fg, normal_bg, 0.10))
   if section_bg == normal_bg then
     section_bg = blend(normal_fg, normal_bg, 0.10)
   end
 
   local chip_fg = vim.o.background == "light" and normal_fg or normal_bg
-  local blue = normalize_chip_bg(color("Identifier", "fg", 0x61afef), normal_fg)
-  local red = normalize_chip_bg(color("ErrorMsg", "fg", 0xe06c75), normal_fg)
-  local green = normalize_chip_bg(color("String", "fg", 0x98c379), normal_fg)
-  local yellow = normalize_chip_bg(color("WarningMsg", "fg", 0xe5c07b), normal_fg)
-  local orange = normalize_chip_bg(color("Number", "fg", 0xd19a66), normal_fg)
-  local baby_pink = normalize_chip_bg(color("Special", "fg", 0xde98fd), normal_fg)
-  local purple = normalize_chip_bg(color("Statement", "fg", 0xc678dd), normal_fg)
+  local blue = normalize_chip_bg(color("Identifier", "fg", "#61afef"), normal_fg)
+  local red = normalize_chip_bg(color("ErrorMsg", "fg", "#e06c75"), normal_fg)
+  local green = normalize_chip_bg(color("String", "fg", "#98c379"), normal_fg)
+  local yellow = normalize_chip_bg(color("WarningMsg", "fg", "#e5c07b"), normal_fg)
+  local orange = normalize_chip_bg(color("Number", "fg", "#d19a66"), normal_fg)
+  local baby_pink = normalize_chip_bg(color("Special", "fg", "#de98fd"), normal_fg)
+  local purple = normalize_chip_bg(color("Statement", "fg", "#c678dd"), normal_fg)
   local white = normalize_chip_bg(color("Normal", "fg", normal_fg), normal_fg)
-  local cyan = normalize_chip_bg(color("Type", "fg", 0x56b6c2), normal_fg)
-  local vibrant_green = normalize_chip_bg(color("Constant", "fg", 0x7eca9c), normal_fg)
-  local teal = normalize_chip_bg(color("PreProc", "fg", 0x519aba), normal_fg)
+  local cyan = normalize_chip_bg(color("Type", "fg", "#56b6c2"), normal_fg)
+  local vibrant_green = normalize_chip_bg(color("Constant", "fg", "#7eca9c"), normal_fg)
+  local teal = normalize_chip_bg(color("PreProc", "fg", "#519aba"), normal_fg)
 
   local highlights = {
-    NoCheatSheetAsciiHeader = { fg = blue, bg = section_bg, bold = true },
+    NoCheatSheetAsciiHeader = { fg = normal_fg, bg = section_bg, bold = true },
     NoCheatSheetSection = { fg = normal_fg, bg = section_bg },
     NoCheatSheetHeading = { fg = chip_fg, bg = blue, bold = true },
   }
 
   if config.options.theme == "grid" then
-    highlights.NoCheatSheetAsciiHeader = { fg = blue, bold = true }
+    highlights.NoCheatSheetAsciiHeader = { fg = normal_fg, bold = true }
 
     local colors = {
       blue = blue,
